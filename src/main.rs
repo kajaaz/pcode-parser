@@ -9,11 +9,10 @@ fn main() {
         // Use `parse` method to convert the string into `Inst`
         match line.parse::<parser::Inst>() {
             Ok(inst) => {
-                // Successfully parsed the line, now you can work with the `inst` object
+                // Successfully parsed the line
                 println!("Parsed instruction: {:?}", inst);
             }
             Err(_) => {
-                // Handle parsing error
                 println!("Error parsing the line.");
             }
         }
