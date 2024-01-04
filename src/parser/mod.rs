@@ -11,7 +11,7 @@
 
 #![allow(dead_code)]
 
-mod parser_impl;
+pub mod parser_impl;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
