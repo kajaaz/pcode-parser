@@ -83,31 +83,31 @@ pub enum Opcode {
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum Size {
-    Byte,
-    Half,
-    Word,
-    Quad,
+    pub Byte,
+    pub Half,
+    pub Word,
+    pub Quad,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Varnode {
-    var: Var,
-    size: Size,
+    pub var: Var,
+    pub size: Size,
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Var {
-    Const(String),
-    Unique(Addr),
-    Register(Addr),
-    Memory(Addr),
+    pub Const(String),
+    pub Unique(Addr),
+    pub Register(Addr),
+    pub Memory(Addr),
 }
 
 #[derive(Clone, Debug)]
 pub struct Inst {
-    opcode: Opcode,
-    output: Option<Varnode>,
-    inputs: Vec<Varnode>,
+    pub opcode: Opcode,
+    pub output: Option<Varnode>,
+    pub inputs: Vec<Varnode>,
 }
 
 pub type Addr = u32;
