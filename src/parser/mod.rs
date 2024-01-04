@@ -13,6 +13,7 @@
 
 pub mod parser_impl;
 use std::collections::BTreeMap;
+use std::hash::{Hash, Hasher};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Opcode {
@@ -101,6 +102,29 @@ pub enum Var {
     Unique(Addr),
     Register(Addr),
     Memory(Addr),
+}
+
+impl Hash for Var {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Var::Const(s) => {
+                0.hash(state); 
+                s.hash(state);
+            },
+            Var::Unique(addr) => {
+                1.hash(state); 
+                addr.hash(state);
+            },
+            Var::Register(addr) => {
+                2.hash(state); 
+                addr.hash(state);
+            },
+            Var::Memory(addr) => {
+                3.hash(state); 
+                addr.hash(state);
+            },
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
