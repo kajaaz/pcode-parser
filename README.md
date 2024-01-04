@@ -1,7 +1,7 @@
 # Pcode Parser
 Parser for raw (low-level) Pcode generated from Ghidra, written in Rust.
 
-### Example in lib.rs
+### Example in main.rs
 The program parses this Pcode line
 ```
 (unique,0x5380,1) = LOAD (const,0x55e4a78f0330,8) (register,0x0,8)

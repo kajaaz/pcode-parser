@@ -83,10 +83,10 @@ pub enum Opcode {
 
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub enum Size {
-    pub Byte,
-    pub Half,
-    pub Word,
-    pub Quad,
+    Byte,
+    Half,
+    Word,
+    Quad,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -97,10 +97,10 @@ pub struct Varnode {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Var {
-    pub Const(String),
-    pub Unique(Addr),
-    pub Register(Addr),
-    pub Memory(Addr),
+    Const(String),
+    Unique(Addr),
+    Register(Addr),
+    Memory(Addr),
 }
 
 #[derive(Clone, Debug)]
