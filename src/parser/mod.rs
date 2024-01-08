@@ -89,6 +89,17 @@ pub enum Size {
     Quad,
 }
 
+impl Size {
+    pub fn to_bitvector_size(self) -> u32 {
+        match self {
+            Size::Byte => 8,
+            Size::Half => 16,
+            Size::Word => 32,
+            Size::Quad => 64,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Varnode {
     pub var: Var,
