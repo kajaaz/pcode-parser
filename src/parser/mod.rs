@@ -121,7 +121,7 @@ pub struct Inst {
     pub inputs: Vec<Varnode>,
 }
 
-pub type Addr = u32;
+pub type Addr = u64;
 
 #[derive(Debug)]
 pub struct CodeListing(BTreeMap<Addr, Vec<Inst>>);

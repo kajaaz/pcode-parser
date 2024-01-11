@@ -113,7 +113,7 @@ impl std::str::FromStr for Varnode {
             "register" => {
                 return Ok(Varnode {
                     var: Var::Register(
-                        u32::from_str_radix(def[1].trim_start_matches("0x"), 16).unwrap(),
+                        u64::from_str_radix(def[1].trim_start_matches("0x"), 16).unwrap(),
                     ),
                     size: def[2].parse().unwrap(),
                 });
@@ -121,7 +121,7 @@ impl std::str::FromStr for Varnode {
             "ram" => {
                 return Ok(Varnode {
                     var: Var::Memory(
-                        u32::from_str_radix(def[1].trim_start_matches("0x"), 16).unwrap(),
+                        u64::from_str_radix(def[1].trim_start_matches("0x"), 16).unwrap(),
                     ),
                     size: def[2].parse().unwrap(),
                 });
@@ -129,7 +129,7 @@ impl std::str::FromStr for Varnode {
             "unique" => {
                 return Ok(Varnode {
                     var: Var::Unique(
-                        u32::from_str_radix(def[1].trim_start_matches("0x"), 16).unwrap(),
+                        u64::from_str_radix(def[1].trim_start_matches("0x"), 16).unwrap(),
                     ),
                     size: def[2].parse().unwrap(),
                 });
@@ -194,7 +194,7 @@ impl std::str::FromStr for CodeListing {
                     curr_vec.push(line.parse().unwrap());
                 }
                 Some(_) => {
-                    let addr: Addr = u32::from_str_radix(&line, 16)
+                    let addr: Addr = u64::from_str_radix(&line, 16)
                         .expect("Failed to parse instruction address!");
 
                     match curr_addr {
