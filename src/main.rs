@@ -2,7 +2,8 @@ pub mod parser;
 
 fn main() {
     let lines = vec![
-        "(unique,0x5380,1) = LOAD (const,0x55e4a78f0330,8) (register,0x0,8)",
+        "STORE (const,0x5636d09d0d50,8) (register,0x0,4) (unique,0x3b80,1)",
+        //"(register,0x200,1) = INT_CARRY (unique,0x5380,1) (register,0x0,1)",
     ];
 
     for line in lines {
