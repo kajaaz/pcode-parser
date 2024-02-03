@@ -106,56 +106,56 @@ impl std::str::FromStr for Varnode {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let def: Vec<&str> = s.split(',').map(|s| s.trim()).collect(); // Split and trim each part
-        assert_eq!(def.len(), 3);
+        // Trim the leading and trailing parentheses before splitting
+        let trimmed = s.trim_matches(|p| p == '(' || p == ')');
+        let def: Vec<&str> = trimmed.split(',').map(|s| s.trim()).collect(); // Split and trim each part
+        assert_eq!(def.len(), 3, "Unexpected number of components in varnode definition: {}", s);
 
-        match def[0] {
-            "register" => {
-                return Ok(Varnode {
-                    var: Var::Register(
-                        u64::from_str_radix(def[1].trim_start_matches("0x"), 16).unwrap(),
-                    ),
-                    size: def[2].parse().unwrap(),
-                });
-            }
-            "ram" => {
-                return Ok(Varnode {
-                    var: Var::Memory(
-                        u64::from_str_radix(def[1].trim_start_matches("0x"), 16).unwrap(),
-                    ),
-                    size: def[2].parse().unwrap(),
-                });
-            }
-            "unique" => {
-                return Ok(Varnode {
-                    var: Var::Unique(
-                        u64::from_str_radix(def[1].trim_start_matches("0x"), 16).unwrap(),
-                    ),
-                    size: def[2].parse().unwrap(),
-                });
-            }
-            "const" => {
-                return Ok(Varnode {
-                    var: Var::Const(def[1].to_string()), // Use the whole string as Const value
-                    size: def[2].parse().unwrap(),
-                });
-            }
-            _ => panic!("Unknown varnode type \"{}\"", def[0]),
-        }
+        let var_type = def[0];
+        let addr_str = def[1].trim_start_matches("0x");
+        let size = def[2].parse().unwrap();
+
+        let var = match var_type {
+            "register" => Var::Register(u64::from_str_radix(addr_str, 16).expect("Failed to parse register address")),
+            "ram" => Var::Memory(u64::from_str_radix(addr_str, 16).expect("Failed to parse memory address")),
+            "unique" => Var::Unique(u64::from_str_radix(addr_str, 16).expect("Failed to parse unique address")),
+            "const" => Var::Const(def[1].to_string()), // Directly use the string for const varnodes
+            _ => panic!("Unknown varnode type \"{}\"", var_type),
+        };
+
+        Ok(Varnode { var, size })
     }
 }
+
 
 impl std::str::FromStr for Inst {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Check if the line is for a STORE operation
+        if s.starts_with("STORE") {
+            let parts: Vec<&str> = s.split_whitespace().collect(); // Split the line by spaces
+            let opcode_str = parts[0]; // The first part is the opcode
+            let inputs = parts[1..] // The remaining parts are the inputs
+                .iter()
+                .map(|&input_str| input_str.parse().unwrap())
+                .collect();
+
+            return Ok(Inst {
+                output: None, // STORE operations do not have an output in the conventional sense
+                opcode: opcode_str.parse().unwrap(),
+                inputs,
+            });
+        }
+
+        // Handle other operations as before
         let parts: Vec<&str> = s.split('=').collect();
         let output_str = parts[0].trim();
         let rest = parts[1].trim();
 
-        let mut opcode_and_inputs = rest.split_whitespace().collect::<Vec<&str>>();
-        let opcode_str = opcode_and_inputs.remove(0); // First element is the opcode
-        let input_strs = opcode_and_inputs; // Remaining elements are the inputs
+        let opcode_and_inputs = rest.split_whitespace().collect::<Vec<&str>>();
+        let opcode_str = opcode_and_inputs[0]; // First element is the opcode
+        let input_strs = opcode_and_inputs[1..].to_vec(); // Remaining elements are the inputs
 
         let output = if output_str != "-" {
             Some(output_str.trim_matches(|p| p == '(' || p == ')').parse().unwrap())
@@ -164,19 +164,19 @@ impl std::str::FromStr for Inst {
         };
 
         let opcode = opcode_str.parse().unwrap();
-
         let inputs = input_strs
             .iter()
             .map(|s| s.trim_matches(|p| p == '(' || p == ')').parse().unwrap())
             .collect();
 
         Ok(Inst {
-            output: output,
-            opcode: opcode,
-            inputs: inputs,
+            output,
+            opcode,
+            inputs,
         })
     }
 }
+
 
 impl std::str::FromStr for CodeListing {
     type Err = ();
@@ -194,7 +194,7 @@ impl std::str::FromStr for CodeListing {
                     curr_vec.push(line.parse().unwrap());
                 }
                 Some(_) => {
-                    let addr: Addr = u64::from_str_radix(&line, 16)
+                    let addr = Addr::from_str_radix(&line, 16)
                         .expect("Failed to parse instruction address!");
 
                     match curr_addr {
