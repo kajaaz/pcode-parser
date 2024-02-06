@@ -47,7 +47,7 @@ pub enum Opcode {
     FloatNotEqual, 
     FloatSqrt,
     FloatSub,
-    Floor,
+    FloatFloor,
     Int2Float,  
     Int2Comp, 
     IntAdd,
