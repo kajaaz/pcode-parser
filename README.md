@@ -2,13 +2,25 @@
 Parser for raw (low-level) Pcode generated from Ghidra, written in Rust.
 
 ## Example in main.rs
-The program parses this Pcode line
+The program parses a Pcode program like this one:
 ```
-(unique,0x5380,1) = LOAD (const,0x55e4a78f0330,8) (register,0x0,8)
+0x400f9c
+(unique,0x5380,1) = LOAD (const,0x55706c52be80,8) (register,0x0,8)
+(register,0x200,1) = INT_CARRY (unique,0x5380,1) (register,0x0,1)
+[...]
+0x400f9e
+(unique,0x5380,1) = LOAD (const,0x55706c52be80,8) (register,0x0,8)
+(register,0x200,1) = INT_CARRY (unique,0x5380,1) (register,0x0,1)
 ```  
 as follows:
 ```
-Parsed instruction: Inst { opcode: Load, output: Some(Varnode { var: Unique(21376), size: Byte }), inputs: [Varnode { var: Const("0x55e4a78f0330"), size: Quad }, Varnode { var: Register(0), size: Quad }] }
+Address: 0x400f9c
+Inst { opcode: Load, output: Some(Varnode { var: Unique(21376), size: Byte }), inputs: [Varnode { var: Const("0x5643218c0ff0"), size: Quad }, Varnode { var: Register(0), size: Quad }] }
+Inst { opcode: IntCarry, output: Some(Varnode { var: Register(512), size: Byte }), inputs: [Varnode { var: Unique(21376), size: Byte }, Varnode { var: Register(0), size: Byte }] }
+[...]
+Address: 0x400f9e
+Inst { opcode: Load, output: Some(Varnode { var: Unique(21376), size: Byte }), inputs: [Varnode { var: Const("0x5643218c0ff0"), size: Quad }, Varnode { var: Register(0), size: Quad }] }
+Inst { opcode: IntCarry, output: Some(Varnode { var: Register(512), size: Byte }), inputs: [Varnode { var: Unique(21376), size: Byte }, Varnode { var: Register(0), size: Byte }] }
 ```
 
 ## Usage
