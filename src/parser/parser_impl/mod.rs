@@ -9,6 +9,7 @@
     Their expertise and support have been invaluable.
 */
 
+use std::collections::BTreeMap;
 
 use crate::parser::{Addr, CodeListing, Inst, Opcode, Size, Value, Var, Varnode};
 
@@ -133,121 +134,134 @@ impl std::str::FromStr for Value {
     }
 }
 
-
 impl std::str::FromStr for Varnode {
-    type Err = ();
+    type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Trim the leading and trailing parentheses before splitting
         let trimmed = s.trim_matches(|p| p == '(' || p == ')');
-        let def: Vec<&str> = trimmed.split(',').map(|s| s.trim()).collect(); // Split and trim each part
-        assert_eq!(def.len(), 3, "Unexpected number of components in varnode definition: {}", s);
+        let def: Vec<&str> = trimmed.split(',').map(|s| s.trim()).collect();
+
+        // Ensure we have exactly 3 components; otherwise, return an error
+        if def.len() != 3 {
+            return Err(format!("Unexpected number of components in varnode definition: '{}'. Expected 3, found {}", trimmed, def.len()));
+        }
 
         let var_type = def[0];
         let addr_str = def[1].trim_start_matches("0x");
-        let size = def[2].parse().unwrap();
+        let size_str = def[2];
+
+        let size = match size_str {
+            "1" => Size::Byte,
+            "2" => Size::Half,
+            "4" => Size::Word,
+            "8" => Size::Quad,
+            _ => return Err(format!("Invalid size in varnode definition: '{}'", size_str)),
+        };
 
         let var = match var_type {
-            "register" => Var::Register(u64::from_str_radix(addr_str, 16).expect("Failed to parse register address")),
-            "ram" => Var::Memory(u64::from_str_radix(addr_str, 16).expect("Failed to parse memory address")),
-            "unique" => Var::Unique(u64::from_str_radix(addr_str, 16).expect("Failed to parse unique address")),
-            "const" => Var::Const(def[1].to_string()), // Directly use the string for const varnodes
-            _ => panic!("Unknown varnode type \"{}\"", var_type),
+            "register" => Var::Register(u64::from_str_radix(addr_str, 16).map_err(|_| format!("Failed to parse register address: '{}'", addr_str))?),
+            "ram" => Var::Memory(u64::from_str_radix(addr_str, 16).map_err(|_| format!("Failed to parse memory address: '{}'", addr_str))?),
+            "unique" => Var::Unique(u64::from_str_radix(addr_str, 16).map_err(|_| format!("Failed to parse unique address: '{}'", addr_str))?),
+            "const" => Var::Const(def[1].to_string()),
+            _ => return Err(format!("Unknown varnode type '{}'", var_type)),
         };
 
         Ok(Varnode { var, size })
     }
 }
 
-
 impl std::str::FromStr for Inst {
-    type Err = ();
+    type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // Check if the line is for a STORE operation
-        if s.starts_with("STORE") {
-            let parts: Vec<&str> = s.split_whitespace().collect(); // Split the line by spaces
-            let opcode_str = parts[0]; // The first part is the opcode
-            let inputs = parts[1..] // The remaining parts are the inputs
-                .iter()
-                .map(|&input_str| input_str.parse().unwrap())
-                .collect();
-
-            return Ok(Inst {
-                output: None, // STORE operations do not have an output in the conventional sense
-                opcode: opcode_str.parse().unwrap(),
-                inputs,
-            });
+        if s.starts_with("0x") {
+            return Err("Address line encountered in instruction parsing context".to_string());
         }
 
-        // Handle other operations as before
-        let parts: Vec<&str> = s.split('=').collect();
-        let output_str = parts[0].trim();
-        let rest = parts[1].trim();
+        // Determine if there's an output by checking if there's an '=' in the instruction
+        let has_output = s.contains("=");
+        let parts = s.splitn(2, '=').map(str::trim).collect::<Vec<&str>>();
 
-        let opcode_and_inputs = rest.split_whitespace().collect::<Vec<&str>>();
-        let opcode_str = opcode_and_inputs[0]; // First element is the opcode
-        let input_strs = opcode_and_inputs[1..].to_vec(); // Remaining elements are the inputs
+        if has_output && parts.len() != 2 {
+            return Err("Malformed instruction with '='".to_string());
+        }
 
-        let output = if output_str != "-" {
-            Some(output_str.trim_matches(|p| p == '(' || p == ')').parse().unwrap())
+        let output = if has_output {
+            Some(parts[0].parse::<Varnode>().map_err(|e| format!("Error parsing output varnode: '{}', error: {}", parts[0], e))?)
         } else {
             None
         };
 
-        let opcode = opcode_str.parse().unwrap();
-        let inputs = input_strs
-            .iter()
-            .map(|s| s.trim_matches(|p| p == '(' || p == ')').parse().unwrap())
-            .collect();
+        let rest = if has_output { parts[1] } else { parts[0] };
+        let opcode_and_inputs: Vec<&str> = rest.split_whitespace().collect();
+        if opcode_and_inputs.is_empty() {
+            return Err("No opcode found in instruction".to_string());
+        }
 
-        Ok(Inst {
-            output,
-            opcode,
-            inputs,
-        })
+        let opcode_str = opcode_and_inputs[0];
+        let inputs_strs = &opcode_and_inputs[1..];
+
+        let opcode = opcode_str.parse::<Opcode>().map_err(|_| format!("Unrecognized opcode: '{}'", opcode_str))?;
+        let inputs = inputs_strs.iter()
+            .map(|&input_str| input_str.parse::<Varnode>().map_err(|e| format!("Error parsing input varnode: '{}', error: {}", input_str, e)))
+            .collect::<Result<Vec<Varnode>, String>>()?;
+
+        Ok(Inst { output, opcode, inputs })
     }
 }
 
 
 impl std::str::FromStr for CodeListing {
-    type Err = ();
+    type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut res = CodeListing::new();
-        let mut curr_addr: Option<Addr> = None;
-        let mut curr_vec: Vec<Inst> = Vec::new();
+        let mut listing = CodeListing(BTreeMap::new());
+        let mut current_addr: Option<Addr> = None;
 
         for line in s.lines() {
-            let line = line.trim();
+            let trimmed_line = line.trim();
 
-            match line.chars().nth(0) {
-                Some('(') | Some('-') => {
-                    curr_vec.push(line.parse().unwrap());
-                }
-                Some(_) => {
-                    let addr = Addr::from_str_radix(&line, 16)
-                        .expect("Failed to parse instruction address!");
-
-                    match curr_addr {
-                        None => {
-                            assert!(curr_vec.is_empty());
-                            curr_addr = Some(addr);
-                        }
-                        Some(_) => {
-                            res.0.insert(curr_addr.unwrap(), curr_vec.clone());
-                            curr_vec = Vec::new();
-                            curr_addr = Some(addr);
-                        }
+            // Check if the line starts with "0x", indicating an address marker
+            if trimmed_line.starts_with("0x") {
+                match Addr::from_str_radix(&trimmed_line[2..], 16) {
+                    Ok(addr) => {
+                        // Successfully parsed the address, update current_addr
+                        current_addr = Some(addr);
+                    },
+                    Err(_) => {
+                        // Log the error and continue to the next line
+                        eprintln!("Invalid address format: {}", trimmed_line);
+                        continue;
                     }
                 }
-                _ => panic!("Could not parse input line \"{}\"", line),
+            } else if let Some(addr) = current_addr {
+                // Process the instruction line and associate it with the current address
+                match trimmed_line.parse::<Inst>() {
+                    Ok(inst) => {
+                        // Add the instruction to the listing under the current address
+                        listing.0.entry(addr).or_insert_with(Vec::new).push(inst);
+                    },
+                    Err(_) => {
+                        // Log the error and potentially skip this line
+                        eprintln!("Error parsing the instruction line: {}", trimmed_line);
+                    }
+                }
+            } else {
+                // Handle the case where an instruction line appears before any address marker
+                eprintln!("Instruction line found without preceding address: {}", trimmed_line);
             }
         }
 
-        res.0.insert(curr_addr.unwrap(), curr_vec.clone());
-        Ok(res)
+        if listing.0.is_empty() {
+            Err("No valid instructions found.".to_string())
+        } else {
+            Ok(listing)
+        }
     }
 }
+
+
+
 
 
