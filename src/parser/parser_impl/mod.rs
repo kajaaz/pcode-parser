@@ -161,7 +161,7 @@ impl std::str::FromStr for Varnode {
         };
 
         let var = match var_type {
-            "register" => Var::Register(u64::from_str_radix(addr_str, 16).map_err(|_| format!("Failed to parse register address: '{}'", addr_str))?),
+            "register" => Var::Register(u64::from_str_radix(addr_str, 16).map_err(|_| format!("Failed to parse register address: '{}'", addr_str))?, size),
             "ram" => Var::Memory(u64::from_str_radix(addr_str, 16).map_err(|_| format!("Failed to parse memory address: '{}'", addr_str))?),
             "unique" => Var::Unique(u64::from_str_radix(addr_str, 16).map_err(|_| format!("Failed to parse unique address: '{}'", addr_str))?),
             "const" => Var::Const(def[1].to_string()),

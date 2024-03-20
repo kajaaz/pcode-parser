@@ -90,7 +90,7 @@ pub enum Opcode {
     Unused1,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Hash)]
 pub enum Size {
     Byte,
     Half,
@@ -121,7 +121,7 @@ pub struct Varnode {
 pub enum Var {
     Const(String),
     Unique(Addr),
-    Register(Addr),
+    Register(Addr, Size),
     Memory(Addr),
 }
 
