@@ -101,9 +101,10 @@ impl std::str::FromStr for Size {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "1" => Ok(Self::Byte),
-            "2" => Ok(Self::Half),
+            "2" | "16" => Ok(Self::Half),
             "4" => Ok(Self::Word),
             "8" => Ok(Self::Quad),
+            "32" => Ok(Self::DQuad),
             _ => panic!("\"{}\" does not correspond to a Size!", s),
         }
     }
