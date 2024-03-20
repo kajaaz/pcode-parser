@@ -101,10 +101,11 @@ impl std::str::FromStr for Size {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "1" => Ok(Self::Byte),
-            "2" | "16" => Ok(Self::Half),
+            "2" => Ok(Self::Half),
             "4" => Ok(Self::Word),
             "8" => Ok(Self::Quad),
-            "32" => Ok(Self::DQuad),
+            "16" => Ok(Self::DoubleQuad),
+            "32" => Ok(Self::QuadQuad),
             _ => panic!("\"{}\" does not correspond to a Size!", s),
         }
     }
@@ -157,6 +158,8 @@ impl std::str::FromStr for Varnode {
             "2" => Size::Half,
             "4" => Size::Word,
             "8" => Size::Quad,
+            "16" => Size::DoubleQuad,
+            "32" => Size::QuadQuad,
             _ => return Err(format!("Invalid size in varnode definition: '{}'", size_str)),
         };
 
