@@ -140,11 +140,14 @@ impl std::str::FromStr for Varnode {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // Trim the leading and trailing parentheses before splitting
         let trimmed = s.trim_matches(|p| p == '(' || p == ')');
         let def: Vec<&str> = trimmed.split(',').map(|s| s.trim()).collect();
 
-        // Ensure we have exactly 3 components; otherwise, return an error
+        // Check if it's the special (ram) case
+        if def.len() == 1 && def[0] == "ram" {
+            return Ok(Varnode { var: Var::MemoryRam, size: Size::Quad }); // Assuming default size is Quad (8 bytes)
+        }
+
         if def.len() != 3 {
             return Err(format!("Unexpected number of components in varnode definition: '{}'. Expected 3, found {}", trimmed, def.len()));
         }
@@ -153,15 +156,7 @@ impl std::str::FromStr for Varnode {
         let addr_str = def[1].trim_start_matches("0x");
         let size_str = def[2];
 
-        let size = match size_str {
-            "1" => Size::Byte,
-            "2" => Size::Half,
-            "4" => Size::Word,
-            "8" => Size::Quad,
-            "16" => Size::DoubleQuad,
-            "32" => Size::QuadQuad,
-            _ => return Err(format!("Invalid size in varnode definition: '{}'", size_str)),
-        };
+        let size = size_str.parse::<Size>().map_err(|_| format!("Invalid size: {}", size_str))?;
 
         let var = match var_type {
             "register" => Var::Register(u64::from_str_radix(addr_str, 16).map_err(|_| format!("Failed to parse register address: '{}'", addr_str))?, size),

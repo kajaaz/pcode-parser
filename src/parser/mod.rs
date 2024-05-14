@@ -125,6 +125,7 @@ pub enum Var {
     Unique(Addr),
     Register(Addr, Size),
     Memory(Addr),
+    MemoryRam, // Represents the case where the memory is referenced as (ram)
 }
 
 #[derive(Clone, Debug)]
