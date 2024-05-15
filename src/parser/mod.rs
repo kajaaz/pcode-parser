@@ -113,19 +113,37 @@ impl Size {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Varnode {
     pub var: Var,
     pub size: Size,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+impl std::fmt::Debug for Varnode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Varnode {{ var: {:?}, size: {:?} }}", self.var, self.size)
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Var {
     Const(String),
     Unique(Addr),
     Register(Addr, Size),
     Memory(Addr),
     MemoryRam, // Represents the case where the memory is referenced as (ram)
+}
+
+impl std::fmt::Debug for Var {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Var::Const(val) => write!(f, "Const({})", val),
+            Var::Unique(addr) => write!(f, "Unique(0x{:x})", addr),
+            Var::Register(addr, size) => write!(f, "Register({:?}, {:?})", addr, size),
+            Var::Memory(addr) => write!(f, "Memory(0x{:x})", addr),
+            Var::MemoryRam => write!(f, "MemoryRam"),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
