@@ -14,7 +14,7 @@ as follows:
 ```
 Address: 0x400f9c
 Inst { opcode: Load, output: Some(Varnode { var: Unique(0x5380), size: Byte }), inputs: [Varnode { var: Const("0x5643218c0ff0"), size: Quad }, Varnode { var: Register(0), size: Quad }] }
-Inst { opcode: IntCarry, output: Some(Varnode { var: Register(512), size: Byte }), inputs: [Varnode { var: Unique(0x5380), size: Byte }, Varnode { var: Register(0), size: Byte }] }
+Inst { opcode: IntCarry, output: Some(Varnode { var: Register(200), size: Byte }), inputs: [Varnode { var: Unique(0x5380), size: Byte }, Varnode { var: Register(0), size: Byte }] }
 [...]
 Address: 0x400f9e
 ```

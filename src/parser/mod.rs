@@ -139,7 +139,7 @@ impl std::fmt::Debug for Var {
         match self {
             Var::Const(val) => write!(f, "Const({})", val),
             Var::Unique(addr) => write!(f, "Unique(0x{:x})", addr),
-            Var::Register(addr, size) => write!(f, "Register({:?}, {:?})", addr, size),
+            Var::Register(addr, size) => write!(f, "Register({:x}, {:?})", addr, size),
             Var::Memory(addr) => write!(f, "Memory(0x{:x})", addr),
             Var::MemoryRam => write!(f, "MemoryRam"),
         }
