@@ -153,7 +153,7 @@ impl std::str::FromStr for Varnode {
         }
 
         let var_type = def[0];
-        let addr_str = def[1].trim_start_matches("0x");
+        let addr_str = def[1];
         let size_str = def[2];
 
         let size = size_str.parse::<Size>().map_err(|_| format!("Invalid size: {}", size_str))?;
